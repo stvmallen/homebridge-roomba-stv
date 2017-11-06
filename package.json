@@ -1,0 +1,29 @@
+{
+  "name": "homebridge-roomba-stv",
+  "description": "homebridge-plugin for Roomba9xx",
+  "version": "0.1.0",
+  "license": "MIT",
+  "author": {
+    "name": "esteban-mallen"
+  },
+  "main": "",
+  "keywords": [
+    "homebridge-plugin",
+    "iRobot",
+    "Roomba"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/esteban-mallen/homebridge-roomba"
+  },
+  "engines": {
+    "node": ">=0.12.0",
+    "homebridge": ">=0.2.0"
+  },
+  "scripts": {
+    "getrobotpwd": "cd node_modules/dorita980 && npm install && node ./bin/getpassword.js"
+  },
+  "dependencies": {
+    "dorita980": "^3.0.11"
+  }
+}
