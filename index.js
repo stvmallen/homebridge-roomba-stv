@@ -14,10 +14,13 @@ const roombaAccessory = function (log, config) {
     this.firmware = 'N/A';
     this.running = 0;
     this.charging = 0;
+    this.batteryLevel = 'N/A';
+    this.binFull = false;
 };
 
 
 roombaAccessory.prototype = {
+
     setState(powerOn, callback) {
         let that = this;
         let roomba = new dorita980.Local(this.blid, this.robotpwd, this.ipaddress);
@@ -111,7 +114,9 @@ roombaAccessory.prototype = {
         let roomba = new dorita980.Local(this.blid, this.robotpwd, this.ipaddress);
 
         roomba.on('connect', function () {
-            roomba.getMission().then((function (response) {
+            that.log('Connected to Roomba');
+
+            roomba.getRobotState(['cleanMissionStatus', 'batPct', 'bin']).then((function (response) {
                 roomba.end();
 
                 switch (response.cleanMissionStatus.phase) {
@@ -140,6 +145,11 @@ roombaAccessory.prototype = {
 
                 callback(null, that.running);
 
+                that.batteryLevel = response.batPct;
+                that.binFull = response.bin.full;
+
+                that.log('Roomba[charging=%s, running=%s, batteryLevel=%s, binFull=%s]',
+                    that.charging, that.running, that.batteryLevel, that.binFull);
             })).catch(function (err) {
                 roomba.end();
 
@@ -162,30 +172,9 @@ roombaAccessory.prototype = {
     },
 
     getBatteryLevel: function (callback) {
-        let that = this;
-        let roomba = new dorita980.Local(this.blid, this.robotpwd, this.ipaddress);
+        this.log("Battery level requested");
 
-        that.log("Battery level requested");
-
-        roomba.on('connect', function () {
-            roomba.getRobotState(['batPct']).then((function (state) {
-                roomba.end();
-
-                that.log("Battery level is %s", state.batPct);
-
-                callback(null, state.batPct);
-
-            })).catch(function (err) {
-                roomba.end();
-
-                that.log("Unable to determine battery level");
-                that.log(err);
-
-                callback(err);
-            });
-
-        });
-
+        callback(null, this.batteryLevel);
     },
 
     identify: function (callback) {
