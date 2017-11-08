@@ -1,13 +1,16 @@
 # homebridge-roomba-stv
 homebridge-plugin for Roomba 9xx (Roomba 900 Software Version 2.x).
 
-## Features:
+[![npm version](https://badge.fury.io/js/homebridge-roomba-stv.svg)](https://badge.fury.io/js/homebridge-roomba-stv)
+[![dependencies Status](https://david-dm.org/esteban-mallen/homebridge-roomba-stv/status.svg)](https://david-dm.org/esteban-mallen/homebridge-roomba-stv)
+
+### Features:
 - Roomba start on demand
 - Roomba stop and dock on demand
 - Roomba charging status
 - Roomba battery level
 
-## Credits to:
+### Credits to:
 
 https://github.com/umesan/homebridge-roomba
 
@@ -15,13 +18,13 @@ https://github.com/steedferns/homebridge-roomba980
 
 https://github.com/gbro115/homebridge-roomba690
 
-# Installation:
+## Installation:
 
-## 1. Install homebridge and Roomba plugin.
+### 1. Install homebridge and Roomba plugin.
 - 1.1 `npm install -g homebridge`
 - 1.2 `npm install -g homebridge-roomba`
 
-## 2. Find robotpwd and blid.
+### 2. Find robotpwd and blid.
 - 2.1 Run `npm run getrobotpwd 192.16.xx.xx` where this plugin in installed
 - 2.2 Follow instructions
 
@@ -44,7 +47,7 @@ Robot Data:
 Password=> :1:2345678910:ABCDEFGHIJKLMNOP <= Yes, all this string.
 ```
 
-## 4. Update homebridge configuration file.
+### 4. Update homebridge configuration file.
 ```
 "accessories": [
   {
