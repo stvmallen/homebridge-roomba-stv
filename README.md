@@ -8,7 +8,7 @@ homebridge-plugin for Roomba 9xx (Roomba 900 Software Version 2.x).
 - Roomba start on demand
 - Roomba stop and dock on demand
 - Roomba charging status
-- Roomba battery level
+- Roomba battery level (with low battery warning)
 
 ### Credits to:
 
