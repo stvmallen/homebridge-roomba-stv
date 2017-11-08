@@ -177,6 +177,17 @@ roombaAccessory.prototype = {
         callback(null, this.batteryLevel);
     },
 
+    getLowBatteryStatus: function (callback) {
+        this.log('Battery status check (Battery level=%s%)', this.batteryLevel);
+
+        if (this.batteryLevel <= 20) {
+            this.log('Low battery');
+            callback(null, Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW);
+        } else {
+            callback(null, Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL);
+        }
+    },
+
     identify: function (callback) {
         this.log('Identify requested. Not supported yet.');
 
@@ -199,12 +210,12 @@ roombaAccessory.prototype = {
             .on('get', this.getState.bind(this));
 
         let batteryService = new Service.BatteryService(this.name);
-
         batteryService.getCharacteristic(Characteristic.BatteryLevel)
             .on('get', this.getBatteryLevel.bind(this));
-
         batteryService.getCharacteristic(Characteristic.ChargingState)
             .on('get', this.getIsCharging.bind(this));
+        batteryService.getCharacteristic(Characteristic.StatusLowBattery)
+            .on('get', this.getLowBatteryStatus.bind(this));
 
         return [accessoryInfo, switchService, batteryService];
     }
