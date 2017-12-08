@@ -14,9 +14,37 @@ const roombaAccessory = function (log, config) {
     this.ipaddress = config.ipaddress;
     this.firmware = "N/A";
 
-    this.cache = new nodeCache({stdTTL: 30, checkPeriod: 5, useClones: false});
-};
+    this.accessoryInfo = new Service.AccessoryInformation();
 
+    this.accessoryInfo.setCharacteristic(Characteristic.Manufacturer, "iRobot");
+    this.accessoryInfo.setCharacteristic(Characteristic.SerialNumber, "See iRobot App");
+    this.accessoryInfo.setCharacteristic(Characteristic.Identify, false);
+    this.accessoryInfo.setCharacteristic(Characteristic.Name, this.name);
+    this.accessoryInfo.setCharacteristic(Characteristic.Model, this.model);
+    this.accessoryInfo.setCharacteristic(Characteristic.FirmwareRevision, this.firmware);
+
+    this.switchService = new Service.Switch(this.name);
+
+    this.switchService
+        .getCharacteristic(Characteristic.On)
+        .on("set", this.setState.bind(this))
+        .on("get", this.getRunningStatus.bind(this));
+
+    this.batteryService = new Service.BatteryService(this.name);
+
+    this.batteryService.getCharacteristic(Characteristic.BatteryLevel)
+        .on("get", this.getBatteryLevel.bind(this));
+    this.batteryService.getCharacteristic(Characteristic.ChargingState)
+        .on("get", this.getIsCharging.bind(this));
+    this.batteryService.getCharacteristic(Characteristic.StatusLowBattery)
+        .on("get", this.getLowBatteryStatus.bind(this));
+
+    this.cache = new nodeCache({stdTTL: 30, checkPeriod: 5, useClones: false});
+
+    this.timer;
+
+    this.autoRefresh();
+};
 
 roombaAccessory.prototype = {
     setState(powerOn, callback) {
@@ -161,7 +189,7 @@ roombaAccessory.prototype = {
         callback();
     },
 
-    getStatus(callback) {
+    getStatus(callback, silent) {
         let status = this.cache.get(STATUS);
 
         if (status) {
@@ -173,11 +201,11 @@ roombaAccessory.prototype = {
                 callback(null, status);
             }
         } else {
-            this.getStatusFromRoomba(callback);
+            this.getStatusFromRoomba(callback, silent);
         }
     },
 
-    getStatusFromRoomba(callback) {
+    getStatusFromRoomba(callback, silent) {
         let that = this;
         let roomba = new dorita980.Local(this.blid, this.robotpwd, this.ipaddress);
 
@@ -192,7 +220,8 @@ roombaAccessory.prototype = {
         that.cache.set(STATUS, "fetching");
 
         roomba.on("connect", () => {
-            that.log("Connected to Roomba");
+
+            if (!silent) that.log("Connected to Roomba");
 
             roomba.getRobotState(["cleanMissionStatus", "batPct", "bin"]).then((response => {
                 roomba.end();
@@ -228,7 +257,7 @@ roombaAccessory.prototype = {
 
                 that.cache.set(STATUS, status);
 
-                that.log("Roomba[%s]", JSON.stringify(status));
+                if (!silent) that.log("Roomba[%s]", JSON.stringify(status));
             })).catch(error => {
                 roomba.end();
 
@@ -243,29 +272,24 @@ roombaAccessory.prototype = {
     },
 
     getServices() {
-        let accessoryInfo = new Service.AccessoryInformation();
-        accessoryInfo.setCharacteristic(Characteristic.Manufacturer, "iRobot");
-        accessoryInfo.setCharacteristic(Characteristic.SerialNumber, "See iRobot App");
-        accessoryInfo.setCharacteristic(Characteristic.Identify, false);
-        accessoryInfo.setCharacteristic(Characteristic.Name, this.name);
-        accessoryInfo.setCharacteristic(Characteristic.Model, this.model);
-        accessoryInfo.setCharacteristic(Characteristic.FirmwareRevision, this.firmware);
+        return [this.accessoryInfo, this.switchService, this.batteryService];
+    },
 
-        let switchService = new Service.Switch(this.name);
-        switchService
-            .getCharacteristic(Characteristic.On)
-            .on("set", this.setState.bind(this))
-            .on("get", this.getRunningStatus.bind(this));
+    autoRefresh() {
+        clearTimeout(this.timer);
 
-        let batteryService = new Service.BatteryService(this.name);
-        batteryService.getCharacteristic(Characteristic.BatteryLevel)
-            .on("get", this.getBatteryLevel.bind(this));
-        batteryService.getCharacteristic(Characteristic.ChargingState)
-            .on("get", this.getIsCharging.bind(this));
-        batteryService.getCharacteristic(Characteristic.StatusLowBattery)
-            .on("get", this.getLowBatteryStatus.bind(this));
+        this.timer = setTimeout(function () {
+            this.getStatus(function (error, status) {
+                if (!error) {
+                    this.switchService.getCharacteristic(Characteristic.On).updateValue(status.running);
+                    this.batteryService.getCharacteristic(Characteristic.ChargingState).updateValue(status.charging);
+                    this.batteryService.getCharacteristic(Characteristic.BatteryLevel).updateValue(status.batteryLevel);
+                    this.batteryService.getCharacteristic(Characteristic.StatusLowBattery).updateValue(status.batteryStatus);
+                }
+            }.bind(this), true);
 
-        return [accessoryInfo, switchService, batteryService];
+            this.autoRefresh();
+        }.bind(this), 60000);
     }
 };
 
