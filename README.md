@@ -58,6 +58,7 @@ Password=> :1:2345678910:ABCDEFGHIJKLMNOP <= Yes, all this string.
     "robotpwd": "aPassword",
     "ipaddress": "10.0.0.30",
     "autoRefreshEnabled" : true //optional
+    "pollingInterval" : 30 //in seconds
   }
 ]
 ```

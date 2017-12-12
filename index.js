@@ -14,6 +14,7 @@ const roombaAccessory = function (log, config) {
     this.ipaddress = config.ipaddress;
     this.firmware = "N/A";
     this.autoRefreshEnabled = config.autoRefreshEnabled | true;
+    this.pollingInterval = config.pollingInterval | 60;
 
     this.accessoryInfo = new Service.AccessoryInformation();
     this.switchService = new Service.Switch(this.name);
@@ -290,7 +291,7 @@ roombaAccessory.prototype = {
                 }.bind(this), true);
 
                 this.autoRefresh();
-            }.bind(this), 60000);
+            }.bind(this), this.pollingInterval * 1000);
         }
     }
 };
