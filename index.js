@@ -13,31 +13,11 @@ const roombaAccessory = function (log, config) {
     this.robotpwd = config.robotpwd;
     this.ipaddress = config.ipaddress;
     this.firmware = "N/A";
+    this.autoRefreshEnabled = config.autoRefreshEnabled | true;
 
     this.accessoryInfo = new Service.AccessoryInformation();
-
-    this.accessoryInfo.setCharacteristic(Characteristic.Manufacturer, "iRobot");
-    this.accessoryInfo.setCharacteristic(Characteristic.SerialNumber, "See iRobot App");
-    this.accessoryInfo.setCharacteristic(Characteristic.Identify, false);
-    this.accessoryInfo.setCharacteristic(Characteristic.Name, this.name);
-    this.accessoryInfo.setCharacteristic(Characteristic.Model, this.model);
-    this.accessoryInfo.setCharacteristic(Characteristic.FirmwareRevision, this.firmware);
-
     this.switchService = new Service.Switch(this.name);
-
-    this.switchService
-        .getCharacteristic(Characteristic.On)
-        .on("set", this.setState.bind(this))
-        .on("get", this.getRunningStatus.bind(this));
-
     this.batteryService = new Service.BatteryService(this.name);
-
-    this.batteryService.getCharacteristic(Characteristic.BatteryLevel)
-        .on("get", this.getBatteryLevel.bind(this));
-    this.batteryService.getCharacteristic(Characteristic.ChargingState)
-        .on("get", this.getIsCharging.bind(this));
-    this.batteryService.getCharacteristic(Characteristic.StatusLowBattery)
-        .on("get", this.getLowBatteryStatus.bind(this));
 
     this.cache = new nodeCache({stdTTL: 30, checkPeriod: 5, useClones: false});
 
@@ -272,24 +252,46 @@ roombaAccessory.prototype = {
     },
 
     getServices() {
+        this.accessoryInfo.setCharacteristic(Characteristic.Manufacturer, "iRobot");
+        this.accessoryInfo.setCharacteristic(Characteristic.SerialNumber, "See iRobot App");
+        this.accessoryInfo.setCharacteristic(Characteristic.Identify, false);
+        this.accessoryInfo.setCharacteristic(Characteristic.Name, this.name);
+        this.accessoryInfo.setCharacteristic(Characteristic.Model, this.model);
+        this.accessoryInfo.setCharacteristic(Characteristic.FirmwareRevision, this.firmware);
+
+        this.switchService
+            .getCharacteristic(Characteristic.On)
+            .on("set", this.setState.bind(this))
+            .on("get", this.getRunningStatus.bind(this));
+
+        this.batteryService.getCharacteristic(Characteristic.BatteryLevel)
+            .on("get", this.getBatteryLevel.bind(this));
+        this.batteryService.getCharacteristic(Characteristic.ChargingState)
+            .on("get", this.getIsCharging.bind(this));
+        this.batteryService.getCharacteristic(Characteristic.StatusLowBattery)
+            .on("get", this.getLowBatteryStatus.bind(this));
+
+
         return [this.accessoryInfo, this.switchService, this.batteryService];
     },
 
     autoRefresh() {
-        clearTimeout(this.timer);
+        if (this.autoRefreshEnabled) {
+            clearTimeout(this.timer);
 
-        this.timer = setTimeout(function () {
-            this.getStatus(function (error, status) {
-                if (!error) {
-                    this.switchService.getCharacteristic(Characteristic.On).updateValue(status.running);
-                    this.batteryService.getCharacteristic(Characteristic.ChargingState).updateValue(status.charging);
-                    this.batteryService.getCharacteristic(Characteristic.BatteryLevel).updateValue(status.batteryLevel);
-                    this.batteryService.getCharacteristic(Characteristic.StatusLowBattery).updateValue(status.batteryStatus);
-                }
-            }.bind(this), true);
+            this.timer = setTimeout(function () {
+                this.getStatus(function (error, status) {
+                    if (!error) {
+                        this.switchService.getCharacteristic(Characteristic.On).updateValue(status.running);
+                        this.batteryService.getCharacteristic(Characteristic.ChargingState).updateValue(status.charging);
+                        this.batteryService.getCharacteristic(Characteristic.BatteryLevel).updateValue(status.batteryLevel);
+                        this.batteryService.getCharacteristic(Characteristic.StatusLowBattery).updateValue(status.batteryStatus);
+                    }
+                }.bind(this), true);
 
-            this.autoRefresh();
-        }.bind(this), 60000);
+                this.autoRefresh();
+            }.bind(this), 60000);
+        }
     }
 };
 

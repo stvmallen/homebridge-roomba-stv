@@ -54,9 +54,10 @@ Password=> :1:2345678910:ABCDEFGHIJKLMNOP <= Yes, all this string.
     "accessory": "Roomba",
     "name": "Roomba",
     "model": "960",
-    "blid": "0123456789abcdef",
-    "robotpwd": ":1:2345678910:ABCDEFGHIJKLMNOP",
-    "ipaddress": "192.168.xx.xx"
+    "blid": "1234567890",
+    "robotpwd": "aPassword",
+    "ipaddress": "10.0.0.30",
+    "autoRefreshEnabled" : true //optional
   }
 ]
 ```
