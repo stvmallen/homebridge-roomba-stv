@@ -14,7 +14,8 @@
       "model": "960",
       "blid": "1234567890",
       "robotpwd": "aPassword",
-      "ipaddress": "10.0.0.30"
+      "ipaddress": "10.0.0.30",
+      "autoRefreshEnabled": true
     }
   ]
 }
