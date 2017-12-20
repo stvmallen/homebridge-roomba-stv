@@ -16,7 +16,8 @@
       "robotpwd": "aPassword",
       "ipaddress": "10.0.0.30",
       "autoRefreshEnabled": true,
-      "pollingInterval": 30
+      "pollingInterval": 30,
+      "cacheTTL": 30
     }
   ]
 }
