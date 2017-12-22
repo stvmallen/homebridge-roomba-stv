@@ -20,7 +20,7 @@ const roombaAccessory = function (log, config) {
     this.switchService = new Service.Switch(this.name);
     this.batteryService = new Service.BatteryService(this.name);
 
-    this.cache = new nodeCache({stdTTL: 30, checkPeriod: 5, useClones: false});
+    this.cache = new nodeCache({stdTTL: this.pollingInterval, checkPeriod: 5, useClones: false});
 
     this.timer;
 
