@@ -3,6 +3,7 @@ let Characteristic;
 
 const dorita980 = require('dorita980');
 const nodeCache = require('node-cache');
+const timeout = require('promise-timeout').timeout;
 const STATUS = "status";
 
 const roombaAccessory = function (log, config) {
@@ -205,7 +206,7 @@ roombaAccessory.prototype = {
 
             if (!silent) that.log("Connected to Roomba");
 
-            roomba.getRobotState(["cleanMissionStatus", "batPct", "bin"]).then((response => {
+            timeout(roomba.getRobotState(["cleanMissionStatus", "batPct", "bin"]), 3000).then((response => {
                 roomba.end();
 
                 status.batteryLevel = response.batPct;
@@ -243,8 +244,9 @@ roombaAccessory.prototype = {
             })).catch(error => {
                 roomba.end();
 
-                that.log("Unable to determine state of Roomba");
-                that.log(error);
+                if (!silent) that.log("Unable to determine state of Roomba");
+
+                that.log.debug(error);
 
                 callback(error);
 
