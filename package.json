@@ -1,7 +1,7 @@
 {
   "name": "homebridge-roomba-stv",
   "description": "homebridge-plugin for Roomba9xx",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "license": "MIT",
   "author": {
     "name": "esteban-mallen"
