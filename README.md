@@ -57,9 +57,15 @@ Password=> :1:2345678910:ABCDEFGHIJKLMNOP <= Yes, all this string.
     "blid": "1234567890",
     "robotpwd": "aPassword",
     "ipaddress": "10.0.0.30",
-    "autoRefreshEnabled" : true //optional
-    "pollingInterval" : 30, //in seconds
-    "cacheTTL" : 30 //in seconds
+    "refreshMode": "keepAlive", //If you use local network mode in roomba app, consider using other values. see note below
+    "pollingInterval": 30, //in seconds
+    "cacheTTL": 30 //in seconds
   }
 ]
 ```
+
+#### refreshMode
+The refresh mode could be one of:
+- none - no auto refresh, we will connect to roomba and poll status when requested by home app. please note that this will cause "Updating" status for all homebridge accessories.
+- autoRefresh - we will connect to roomba, every `pollingInterval` seconds, and store the status in cache. if pollingInterval = cacheTTL - 10 (or more), this will make sure we will always have a valid status.
+- keepAlive - we will keep a connection to roomba, this will cause app to fail to connect to roomba in local network mode (cloud mode will work just fine, even in your home wifi).
