@@ -15,8 +15,8 @@ const roombaAccessory = function(log, config) {
     this.ipaddress = config.ipaddress;
     this.firmware = "N/A";
     this.autoRefreshEnabled = config.autoRefreshEnabled | true;
-    this.pollingInterval = config.pollingInterval | 60;
-    this.cacheTTL = config.cacheTTL | 30;
+    this.pollingInterval = config.pollingInterval || 60;
+    this.cacheTTL = config.cacheTTL || 30;
 
     this.accessoryInfo = new Service.AccessoryInformation();
     this.switchService = new Service.Switch(this.name);
