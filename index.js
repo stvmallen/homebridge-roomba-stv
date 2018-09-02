@@ -1,12 +1,12 @@
 let Service;
 let Characteristic;
 
-const dorita980 = require('dorita980');
-const nodeCache = require('node-cache');
-const timeout = require('promise-timeout').timeout;
+const dorita980 = require("dorita980");
+const nodeCache = require("node-cache");
+const timeout = require("promise-timeout").timeout;
 const STATUS = "status";
 
-const roombaAccessory = function (log, config) {
+const roombaAccessory = function(log, config) {
     this.log = log;
     this.name = config.name;
     this.model = config.model;
@@ -22,7 +22,11 @@ const roombaAccessory = function (log, config) {
     this.switchService = new Service.Switch(this.name);
     this.batteryService = new Service.BatteryService(this.name);
 
-    this.cache = new nodeCache({stdTTL: this.cacheTTL, checkPeriod: 5, useClones: false});
+    this.cache = new nodeCache({
+        stdTTL: this.cacheTTL,
+        checkPeriod: 5,
+        useClones: false
+    });
 
     this.timer;
 
@@ -39,81 +43,98 @@ roombaAccessory.prototype = {
         if (powerOn) {
             that.log("Starting Roomba");
 
-            roomba.on('connect', () => {
-                roomba.start().then(() => {
-                    setTimeout(() => {
-                        that.log("Roomba is running");
+            roomba.on("connect", () => {
+                roomba
+                    .start()
+                    .then(() => {
+                        setTimeout(() => {
+                            that.log("Roomba is running");
+
+                            roomba.end();
+                        }, 2000);
+
+                        callback();
+                    })
+                    .catch(error => {
+                        that.log("Roomba failed: %s", error.message);
 
                         roomba.end();
-                    }, 2000);
 
-                    callback();
-                }).catch((error) => {
-                    that.log("Roomba failed: %s", error.message);
-
-                    roomba.end();
-
-                    callback(error);
-                });
+                        callback(error);
+                    });
             });
         } else {
             that.log("Roomba pause and dock");
 
             roomba.on("connect", () => {
-                roomba.pause().then(() => {
-                    that.log("Roomba is pausing");
+                roomba
+                    .pause()
+                    .then(() => {
+                        that.log("Roomba is pausing");
 
-                    callback();
+                        callback();
 
-                    that.log("Roomba paused, returning to Dock");
+                        that.log("Roomba paused, returning to Dock");
 
-                    let checkStatus = delay => {
-                        setTimeout(() => {
-                            roomba.getRobotState(["cleanMissionStatus"]).then((state => {
-                                switch (state.cleanMissionStatus.phase) {
-                                    case "stop":
-                                        that.log("Roomba has stopped, issuing dock request");
+                        let checkStatus = delay => {
+                            setTimeout(() => {
+                                roomba
+                                    .getRobotState(["cleanMissionStatus"])
+                                    .then(state => {
+                                        switch (state.cleanMissionStatus.phase) {
+                                            case "stop":
+                                                that.log(
+                                                    "Roomba has stopped, issuing dock request"
+                                                );
 
-                                        roomba.dock().then(((response) => {
-                                            roomba.end();
+                                                roomba
+                                                    .dock()
+                                                    .then(response => {
+                                                        roomba.end();
 
-                                            that.log("Roomba docking");
-                                        })).catch((error) => {
-                                            that.log("Roomba failed: %s", error.message);
-                                        });
+                                                        that.log("Roomba docking");
+                                                    })
+                                                    .catch(error => {
+                                                        that.log(
+                                                            "Roomba failed: %s",
+                                                            error.message
+                                                        );
+                                                    });
 
-                                        break;
-                                    case "run":
-                                        that.log("Roomba is still running. Will check again in 3 seconds");
+                                                break;
+                                            case "run":
+                                                that.log(
+                                                    "Roomba is still running. Will check again in 3 seconds"
+                                                );
 
-                                        checkStatus(delay);
+                                                checkStatus(delay);
 
-                                        break;
-                                    default:
+                                                break;
+                                            default:
+                                                roomba.end();
+
+                                                that.log("Roomba is not running");
+
+                                                break;
+                                        }
+                                    })
+                                    .catch(error => {
+                                        that.log(error);
+
                                         roomba.end();
+                                    });
+                            }, delay);
+                        };
 
-                                        that.log("Roomba is not running");
+                        checkStatus(3000);
+                    })
+                    .catch(error => {
+                        that.log("Roomba failed: %s", error.message);
 
-                                        break;
-                                }
+                        roomba.end();
 
-                            })).catch(error => {
-                                that.log(error);
-
-                                roomba.end();
-                            });
-                        }, delay);
-                    };
-
-                    checkStatus(3000);
-
-                }).catch((error) => {
-                    that.log("Roomba failed: %s", error.message);
-
-                    roomba.end();
-
-                    callback(error);
-                });
+                        callback(error);
+                    });
             });
         }
     },
@@ -203,55 +224,56 @@ roombaAccessory.prototype = {
         that.cache.set(STATUS, "fetching");
 
         roomba.on("connect", () => {
-
             if (!silent) that.log("Connected to Roomba");
 
-            timeout(roomba.getRobotState(["cleanMissionStatus", "batPct", "bin"]), 3000).then((response => {
-                roomba.end();
+            timeout(roomba.getRobotState(["cleanMissionStatus", "batPct", "bin"]), 3000)
+                .then(response => {
+                    roomba.end();
 
-                status.batteryLevel = response.batPct;
-                status.binFull = response.bin.full;
+                    status.batteryLevel = response.batPct;
+                    status.binFull = response.bin.full;
 
-                if (status.batteryLevel <= 20) {
-                    status.batteryStatus = Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW;
-                } else {
-                    status.batteryStatus = Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
-                }
+                    if (status.batteryLevel <= 20) {
+                        status.batteryStatus = Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW;
+                    } else {
+                        status.batteryStatus = Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
+                    }
 
-                switch (response.cleanMissionStatus.phase) {
-                    case "run":
-                        status.running = 1;
-                        status.charging = Characteristic.ChargingState.NOT_CHARGING;
+                    switch (response.cleanMissionStatus.phase) {
+                        case "run":
+                            status.running = 1;
+                            status.charging = Characteristic.ChargingState.NOT_CHARGING;
 
-                        break;
-                    case "charge":
-                        status.running = 0;
-                        status.charging = Characteristic.ChargingState.CHARGING;
+                            break;
+                        case "charge":
+                            status.running = 0;
+                            status.charging = Characteristic.ChargingState.CHARGING;
 
-                        break;
-                    default:
-                        status.running = 0;
-                        status.charging = Characteristic.ChargingState.NOT_CHARGING;
+                            break;
+                        default:
+                            status.running = 0;
+                            status.charging = Characteristic.ChargingState.NOT_CHARGING;
 
-                        break;
-                }
+                            break;
+                    }
 
-                callback(null, status);
+                    callback(null, status);
 
-                that.cache.set(STATUS, status);
+                    that.cache.set(STATUS, status);
 
-                if (!silent) that.log("Roomba[%s]", JSON.stringify(status));
-            })).catch(error => {
-                roomba.end();
+                    if (!silent) that.log("Roomba[%s]", JSON.stringify(status));
+                })
+                .catch(error => {
+                    roomba.end();
 
-                if (!silent) that.log("Unable to determine state of Roomba");
+                    if (!silent) that.log("Unable to determine state of Roomba");
 
-                that.log.debug(error);
+                    that.log.debug(error);
 
-                callback(error);
+                    callback(error);
 
-                that.cache.del(STATUS);
-            });
+                    that.cache.del(STATUS);
+                });
         });
     },
 
@@ -268,13 +290,15 @@ roombaAccessory.prototype = {
             .on("set", this.setState.bind(this))
             .on("get", this.getRunningStatus.bind(this));
 
-        this.batteryService.getCharacteristic(Characteristic.BatteryLevel)
+        this.batteryService
+            .getCharacteristic(Characteristic.BatteryLevel)
             .on("get", this.getBatteryLevel.bind(this));
-        this.batteryService.getCharacteristic(Characteristic.ChargingState)
+        this.batteryService
+            .getCharacteristic(Characteristic.ChargingState)
             .on("get", this.getIsCharging.bind(this));
-        this.batteryService.getCharacteristic(Characteristic.StatusLowBattery)
+        this.batteryService
+            .getCharacteristic(Characteristic.StatusLowBattery)
             .on("get", this.getLowBatteryStatus.bind(this));
-
 
         return [this.accessoryInfo, this.switchService, this.batteryService];
     },
@@ -283,23 +307,37 @@ roombaAccessory.prototype = {
         if (this.autoRefreshEnabled) {
             clearTimeout(this.timer);
 
-            this.timer = setTimeout(function () {
-                this.getStatus(function (error, status) {
-                    if (!error) {
-                        this.switchService.getCharacteristic(Characteristic.On).updateValue(status.running);
-                        this.batteryService.getCharacteristic(Characteristic.ChargingState).updateValue(status.charging);
-                        this.batteryService.getCharacteristic(Characteristic.BatteryLevel).updateValue(status.batteryLevel);
-                        this.batteryService.getCharacteristic(Characteristic.StatusLowBattery).updateValue(status.batteryStatus);
-                    }
-                }.bind(this), true);
+            this.timer = setTimeout(
+                function() {
+                    this.getStatus(
+                        function(error, status) {
+                            if (!error) {
+                                this.switchService
+                                    .getCharacteristic(Characteristic.On)
+                                    .updateValue(status.running);
+                                this.batteryService
+                                    .getCharacteristic(Characteristic.ChargingState)
+                                    .updateValue(status.charging);
+                                this.batteryService
+                                    .getCharacteristic(Characteristic.BatteryLevel)
+                                    .updateValue(status.batteryLevel);
+                                this.batteryService
+                                    .getCharacteristic(Characteristic.StatusLowBattery)
+                                    .updateValue(status.batteryStatus);
+                            }
+                        }.bind(this),
+                        true
+                    );
 
-                this.autoRefresh();
-            }.bind(this), this.pollingInterval * 1000);
+                    this.autoRefresh();
+                }.bind(this),
+                this.pollingInterval * 1000
+            );
         }
     }
 };
 
-module.exports = (homebridge) => {
+module.exports = homebridge => {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
 
