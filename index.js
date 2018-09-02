@@ -199,7 +199,6 @@ roombaAccessory.prototype = {
 
     getStatus(callback, silent) {
         let status = this.cache.get(STATUS);
-        this.log("status" + JSON.stringify(status));
         if (status) {
             callback(null, status);
         } else {
@@ -237,7 +236,6 @@ roombaAccessory.prototype = {
     },
 
     parseState(state) {
-        this.log("Parsing");
         let status = {
             running: 0,
             charging: 0,
@@ -253,7 +251,6 @@ roombaAccessory.prototype = {
         } else {
             status.batteryStatus = Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
         }
-        this.log("mission: ", state.cleanMissionStatus);
         switch (state.cleanMissionStatus.phase) {
             case "run":
                 status.running = 1;
@@ -309,7 +306,6 @@ roombaAccessory.prototype = {
         });
     },
     autoRefresh() {
-        this.log("auto refresh " + this.autoRefreshEnabled + " " + this.pollingInterval);
         if (this.autoRefreshEnabled) {
             clearTimeout(this.timer);
 
