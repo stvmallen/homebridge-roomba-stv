@@ -18,6 +18,8 @@ https://github.com/steedferns/homebridge-roomba980
 
 https://github.com/gbro115/homebridge-roomba690
 
+ [@matanelgabsi](https://github.com/matanelgabsi) for keepAlive feature
+
 ## Installation:
 
 ### 1. Install homebridge and Roomba plugin.
