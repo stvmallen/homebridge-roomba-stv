@@ -59,14 +59,15 @@ Password=> :1:2345678910:ABCDEFGHIJKLMNOP <= Yes, all this string.
     "blid": "1234567890",
     "robotpwd": "aPassword",
     "ipaddress": "10.0.0.30",
-    "refreshMode": "keepAlive", //If you use local network mode in roomba app, consider using other values. see note below
+    "autoRefreshEnabled": true,
+    "keepAliveEnabled": true, //If you use local network mode in roomba app, consider disabling. see note below
     "cacheTTL": 30 //in seconds
   }
 ]
 ```
 
-#### refreshMode
-The refresh mode could be one of:
-- `none` - no auto refresh, we will connect to roomba and poll status when requested by home app. Please note that this will cause "Updating" status for all homebridge accessories.
-- `autoRefresh` - we will connect to roomba, every `pollingInterval` seconds, and store the status in cache. if `pollingInterval` = `cacheTTL - 10 (or more), this will make sure we will always have a valid status.
-- `keepAlive` - we will keep a connection to roomba, this will cause app to fail to connect to roomba in local network mode (cloud mode will work just fine, even in your home wifi). This will lead to better performance (status will refresh faster, and toggle will work faster as well)
+#### Refresh mode
+This plugins supports these refresh modes:
+- NONE (`autoRefreshEnabled` and `keepAlive` both set to false) - no auto refresh, we will connect to roomba and poll status when requested by home app. Please note that this will cause "Updating" status for all homebridge accessories.
+- AUTO REFRESH (`autoRefreshEnabled` set to true) - we will connect to roomba, every `pollingInterval` seconds, and store the status in cache. if `pollingInterval` = `cacheTTL` - 10 (or more), this will make sure we will always have a valid status.
+- KEEP ALIVE (`keepAlive` set to true) - we will keep a connection to roomba, this will cause app to fail to connect to roomba in local network mode (cloud mode will work just fine, even in your home wifi). This will lead to better performance (status will refresh faster, and toggle will work faster as well)

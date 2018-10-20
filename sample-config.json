@@ -15,7 +15,8 @@
       "blid": "1234567890",
       "robotpwd": "aPassword",
       "ipaddress": "10.0.0.30",
-      "refreshMode": "keepAlive",
+      "autoRefreshEnabled": true,
+      "keepAliveEnabled": true,
       "cacheTTL": 30
     }
   ]
