@@ -126,7 +126,7 @@ roombaAccessory.prototype = {
                     break;
                 case "run":
                     this.log("Roomba is still running. Will check again in 3 seconds");
-                    dockWhenStopped(roomba, pollingInterval);
+                    this.dockWhenStopped(roomba, pollingInterval);
 
                     break;
                 default:
