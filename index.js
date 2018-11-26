@@ -54,12 +54,12 @@ roombaAccessory.prototype = {
             return new dorita980.Local(this.blid, this.robotpwd, this.ipaddress);
         }
     },
-    onConnected(roomba, callback) {
+    onConnected(roomba, callback, silent) {
         if (this.keepAliveEnabled && roomba.connected) {
             callback();
         } else {
             roomba.on("connect", () => {
-                this.log("Connected to Roomba");
+                if (!silent) this.log("Connected to Roomba");
                 callback();
             });
         }
@@ -200,7 +200,7 @@ roombaAccessory.prototype = {
         let status = this.cache.get(STATUS);
         if (status) {
             if (status === "fetching") {
-                getStatus(callback, silent);
+                this.getStatus(callback, silent);
             }
 
             callback(null, status);
@@ -235,7 +235,7 @@ roombaAccessory.prototype = {
             } finally {
                 this.endRoombaIfNeeded(roomba);
             }
-        });
+        }, silent);
     },
 
     parseState(state) {
