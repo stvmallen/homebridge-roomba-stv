@@ -38,7 +38,7 @@ const roombaAccessory = function(log, config) {
         let that = this;
         this.cache.on('expired', (key, value) => {
             that.log.debug(key + " expired");
-            that.getStatusFromRoomba((error, status) => {
+            that.getStatusFromRoomba(function (error, status) {
                 if (!error) that.updateCharacteristics(status);
             }, true);
         });
