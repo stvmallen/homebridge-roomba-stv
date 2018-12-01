@@ -30,15 +30,20 @@ const roombaAccessory = function(log, config) {
         useClones: false
     });
 
-    this.cache.on('expired', (key, value) => {
-       log.debug(key + " expired");
-    });
-
     this.timer;
 
     if (this.autoRefreshEnabled) {
         this.log("Enabling autoRefresh every %s seconds", this.cache.options.stdTTL);
-        this.autoRefresh();
+
+        let that = this;
+        this.cache.on('expired', (key, value) => {
+            that.log.debug(key + " expired");
+            that.getStatusFromRoomba((error, status) => {
+                if (!error) that.updateCharacteristics(status);
+            }, true);
+        });
+
+        this.getStatus();
     }
 
     if (this.keepAliveEnabled) {
