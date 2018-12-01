@@ -32,7 +32,10 @@ const roombaAccessory = function(log, config) {
 
     this.timer;
 
-    if (this.autoRefreshEnabled) {
+    if (this.keepAliveEnabled) {
+        this.log("Enabling keepAlive");
+        this.registerStateUpdate();
+    } else if (this.autoRefreshEnabled) {
         this.log("Enabling autoRefresh every %s seconds", this.cache.options.stdTTL);
 
         let that = this;
@@ -44,11 +47,6 @@ const roombaAccessory = function(log, config) {
         });
 
         this.getStatus();
-    }
-
-    if (this.keepAliveEnabled) {
-        this.log("Enabling keepAlive");
-        this.registerStateUpdate();
     }
 };
 
