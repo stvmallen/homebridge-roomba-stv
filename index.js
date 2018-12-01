@@ -16,8 +16,7 @@ const roombaAccessory = function(log, config) {
     this.firmware = "N/A";
     this.keepAliveEnabled = config.keepAliveEnabled;
     this.autoRefreshEnabled = config.autoRefreshEnabled;
-    this.pollingInterval = config.pollingInterval || 30;
-    this.cacheTTL = config.cacheTTL || 29;
+    this.cacheTTL = config.cacheTTL || 30;
     this.roomba = null;
 
     this.accessoryInfo = new Service.AccessoryInformation();
@@ -26,29 +25,14 @@ const roombaAccessory = function(log, config) {
 
     this.cache = new nodeCache({
         stdTTL: this.cacheTTL,
-        checkperiod: 5,
+        checkperiod: 2,
         useClones: false
     });
 
-    this.timer;
-
     if (this.keepAliveEnabled) {
-        this.log("Enabling keepAlive");
         this.registerStateUpdate();
     } else if (this.autoRefreshEnabled) {
-        this.log("Enabling autoRefresh every %s seconds", this.cache.options.stdTTL);
-
-        let that = this;
-        this.cache.on('expired', (key, value) => {
-            log.debug(key + " expired");
-            that.getStatusFromRoomba((error, status) => {
-                if (!error) that.updateCharacteristics(status);
-            }, true);
-        });
-
-        this.getStatusFromRoomba((error, status) => {
-            if (!error) that.updateCharacteristics(status);
-        }, true);
+        this.enableAutoRefresh();
     }
 };
 
@@ -63,6 +47,7 @@ roombaAccessory.prototype = {
             return new dorita980.Local(this.blid, this.robotpwd, this.ipaddress);
         }
     },
+
     onConnected(roomba, callback, silent) {
         if (this.keepAliveEnabled && roomba.connected) {
             callback();
@@ -77,6 +62,7 @@ roombaAccessory.prototype = {
             });
         }
     },
+
     setState(powerOn, callback) {
         let roomba = this.getRoomba();
 
@@ -117,11 +103,13 @@ roombaAccessory.prototype = {
             });
         }
     },
+
     endRoombaIfNeeded(roomba) {
         if (!this.keepAliveEnabled) {
             roomba.end();
         }
     },
+
     async dockWhenStopped(roomba, pollingInterval) {
         try {
             const state = await roomba.getRobotState(["cleanMissionStatus"]);
@@ -151,11 +139,13 @@ roombaAccessory.prototype = {
             this.endRoombaIfNeeded(roomba);
         }
     },
+
     sleep(delay) {
         return new Promise((resolve, reject) => {
             setTimeout(resolve, delay);
         });
     },
+
     getRunningStatus(callback) {
         this.log("Running status requested");
 
@@ -167,6 +157,7 @@ roombaAccessory.prototype = {
             }
         });
     },
+
     getIsCharging(callback) {
         this.log("Charging status requested");
 
@@ -212,10 +203,6 @@ roombaAccessory.prototype = {
     getStatus(callback, silent) {
         let status = this.cache.get(STATUS);
         if (status) {
-            if (status === "fetching") {
-                this.getStatus(callback, silent);
-            }
-
             callback(null, status);
         } else {
             this.getStatusFromRoomba(callback, silent);
@@ -227,8 +214,6 @@ roombaAccessory.prototype = {
 
         this.onConnected(roomba, async () => {
             try {
-                this.cache.set(STATUS, "fetching");
-
                 let response = await roomba.getRobotState(["cleanMissionStatus", "batPct", "bin"]);
                 const status = this.parseState(response);
 
@@ -267,6 +252,7 @@ roombaAccessory.prototype = {
             batteryStatus: "N/A",
             binFull: false
         };
+
         status.batteryLevel = state.batPct;
         status.binFull = state.bin.full;
 
@@ -275,6 +261,7 @@ roombaAccessory.prototype = {
         } else {
             status.batteryStatus = Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
         }
+
         switch (state.cleanMissionStatus.phase) {
             case "run":
                 status.running = 1;
@@ -320,8 +307,12 @@ roombaAccessory.prototype = {
 
         return [this.accessoryInfo, this.switchService, this.batteryService];
     },
+
     registerStateUpdate() {
+        this.log("Enabling keepAlive");
+
         const roomba = this.getRoomba();
+
         roomba.on("state", state => {
             const status = this.parseState(state);
 
@@ -330,21 +321,7 @@ roombaAccessory.prototype = {
             this.updateCharacteristics(status);
         });
     },
-    autoRefresh() {
-        if (this.autoRefreshEnabled) {
-            clearTimeout(this.timer);
 
-            this.timer = setTimeout(() => {
-                this.getStatus((error, status) => {
-                    if (!error) {
-                        this.updateCharacteristics(status);
-                    }
-                }, true);
-
-                this.autoRefresh();
-            }, this.pollingInterval * 1000);
-        }
-    },
     updateCharacteristics(status) {
         this.switchService
             .getCharacteristic(Characteristic.On)
@@ -358,6 +335,23 @@ roombaAccessory.prototype = {
         this.batteryService
             .getCharacteristic(Characteristic.StatusLowBattery)
             .updateValue(status.batteryStatus);
+    },
+
+    enableAutoRefresh() {
+        this.log("Enabling autoRefresh every %s seconds", this.cache.options.stdTTL);
+
+        let that = this;
+        this.cache.on('expired', (key, value) => {
+            that.log.debug(key + " expired");
+
+            that.getStatusFromRoomba((error, status) => {
+                if (!error) that.updateCharacteristics(status);
+            }, true);
+        });
+
+        this.getStatusFromRoomba((error, status) => {
+            if (!error) that.updateCharacteristics(status);
+        }, true);
     }
 };
 
