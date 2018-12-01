@@ -30,6 +30,10 @@ const roombaAccessory = function(log, config) {
         useClones: false
     });
 
+    this.cache.on('expired', (key, value) => {
+       log.debug(key + " expired");
+    });
+
     this.timer;
 
     if (this.autoRefreshEnabled) {
@@ -59,7 +63,11 @@ roombaAccessory.prototype = {
             callback();
         } else {
             roomba.on("connect", () => {
-                if (!silent) this.log("Connected to Roomba");
+                if (!silent) {
+                    this.log("Connected to Roomba");
+                } else {
+                    this.log.debug("Connected to Roomba");
+                }
                 callback();
             });
         }
@@ -223,9 +231,17 @@ roombaAccessory.prototype = {
 
                 this.cache.set(STATUS, status);
 
-                if (!silent) this.log("Roomba[%s]", JSON.stringify(status));
+                if (!silent) {
+                    this.log("Roomba[%s]", JSON.stringify(status));
+                } else {
+                    this.log.debug("Roomba[%s]", JSON.stringify(status));
+                }
             } catch (error) {
-                if (!silent) this.log("Unable to determine state of Roomba");
+                if (!silent) {
+                    this.log("Unable to determine state of Roomba");
+                } else {
+                    this.log.debug("Unable to determine state of Roomba");
+                }
 
                 this.log.debug(error);
 
