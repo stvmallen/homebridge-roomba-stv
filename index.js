@@ -7,7 +7,7 @@ const timeout = require("promise-timeout").timeout;
 const STATUS = "status";
 const FETCHING = "fetching";
 
-const roombaAccessory = function(log, config) {
+const roombaAccessory = function (log, config) {
     this.log = log;
     this.name = config.name;
     this.model = config.model;
@@ -206,9 +206,9 @@ roombaAccessory.prototype = {
         if (status) {
             if (status === FETCHING) {
                 this.getStatus(callback, silent);
-            } else {
-                callback(null, status);
             }
+
+            callback(null, status);
         } else {
             this.getStatusFromRoomba(callback, silent);
         }
