@@ -26,7 +26,7 @@ const roombaAccessory = function(log, config) {
 
     this.cache = new nodeCache({
         stdTTL: this.cacheTTL,
-        checkPeriod: 5,
+        checkperiod: 5,
         useClones: false
     });
 
