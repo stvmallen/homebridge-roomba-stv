@@ -3,7 +3,6 @@ let Characteristic;
 
 const dorita980 = require("dorita980");
 const nodeCache = require("node-cache");
-const timeout = require("promise-timeout").timeout;
 const STATUS = "status";
 const FETCHING = "fetching";
 
@@ -205,7 +204,7 @@ roombaAccessory.prototype = {
         let status = this.cache.get(STATUS);
         if (status) {
             if (status === FETCHING) {
-                this.getStatus(callback, silent);
+                setImmediate(() => this.getStatus(callback, silent));
             }
 
             callback(null, status);
