@@ -204,7 +204,7 @@ roombaAccessory.prototype = {
         let status = this.cache.get(STATUS);
         if (status) {
             if (status === FETCHING) {
-                setImmediate(() => this.getStatus(callback, silent));
+                setTimeout(() => this.getStatus(callback, silent), 0);
             }
 
             callback(null, status);
