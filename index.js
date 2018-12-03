@@ -4,7 +4,6 @@ let Characteristic;
 const dorita980 = require("dorita980");
 const nodeCache = require("node-cache");
 const STATUS = "status";
-const FETCHING = "fetching";
 
 const roombaAccessory = function (log, config) {
     this.log = log;
@@ -16,7 +15,7 @@ const roombaAccessory = function (log, config) {
     this.firmware = "N/A";
     this.keepAliveEnabled = config.keepAliveEnabled;
     this.autoRefreshEnabled = config.autoRefreshEnabled;
-    this.cacheTTL = config.cacheTTL || 30;
+    this.cacheTTL = config.cacheTTL || 5;
     this.roomba = null;
 
     this.accessoryInfo = new Service.AccessoryInformation();
@@ -73,14 +72,18 @@ roombaAccessory.prototype = {
 
             this.onConnected(roomba, async () => {
                 try {
-                    await roomba.start();
                     this.log("Roomba is running");
+
+                    await roomba.start();
+
                     callback();
                 } catch (error) {
                     this.log("Roomba failed: %s", error.message);
+
                     callback(error);
                 } finally {
                     await this.sleep(2000);
+
                     this.endRoombaIfNeeded(roomba);
                 }
             });
@@ -89,15 +92,20 @@ roombaAccessory.prototype = {
 
             this.onConnected(roomba, async () => {
                 try {
-                    await roomba.pause();
                     this.log("Roomba is pausing");
 
+                    await roomba.pause();
+
                     callback();
+
                     this.log("Roomba paused, returning to Dock");
+
                     this.dockWhenStopped(roomba, 3000);
                 } catch (error) {
                     this.log("Roomba failed: %s", error.message);
+
                     this.endRoombaIfNeeded(roomba);
+
                     callback(error);
                 }
             });
@@ -120,18 +128,22 @@ roombaAccessory.prototype = {
 
                     await roomba.dock();
                     this.endRoombaIfNeeded(roomba);
+
                     this.log("Roomba docking");
 
                     break;
                 case "run":
                     this.log("Roomba is still running. Will check again in 3 seconds");
-                    this.sleep(pollingInterval);
+
+                    await this.sleep(pollingInterval);
                     this.dockWhenStopped(roomba, pollingInterval);
 
                     break;
                 default:
                     this.endRoombaIfNeeded(roomba);
+
                     this.log("Roomba is not running");
+
                     break;
             }
         } catch (error) {
@@ -202,14 +214,13 @@ roombaAccessory.prototype = {
 
     getStatus(callback, silent) {
         let status = this.cache.get(STATUS);
-        if (status) {
-            if (status === FETCHING) {
-                setTimeout(() => this.getStatus(callback, silent), 0);
-            }
 
-            callback(null, status);
-        } else {
+        if (!status) {
+            setTimeout(() => this.getStatus(callback, silent), 10);
+        } else if (!this.autoRefreshEnabled) {
             this.getStatusFromRoomba(callback, silent);
+        } else {
+            callback(null, status);
         }
     },
 
@@ -218,14 +229,14 @@ roombaAccessory.prototype = {
 
         this.onConnected(roomba, async () => {
             try {
-                this.cache.set(STATUS, FETCHING);
-
                 let response = await roomba.getRobotState(["cleanMissionStatus", "batPct", "bin"]);
                 const status = this.parseState(response);
 
-                callback(null, status);
+                if (this.autoRefreshEnabled) {
+                    this.cache.set(STATUS, status);
+                }
 
-                this.cache.set(STATUS, status);
+                callback(null, status);
 
                 if (!silent) {
                     this.log("Roomba[%s]", JSON.stringify(status));
@@ -322,7 +333,9 @@ roombaAccessory.prototype = {
         roomba.on("state", state => {
             const status = this.parseState(state);
 
-            this.cache.set(STATUS, status);
+            if (this.autoRefreshEnabled) {
+                this.cache.set(STATUS, status);
+            }
 
             this.updateCharacteristics(status);
         });
