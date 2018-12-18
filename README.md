@@ -23,12 +23,12 @@ https://github.com/gbro115/homebridge-roomba690
 ## Installation:
 
 ### 1. Install homebridge and Roomba plugin.
-- 1.1 `npm install -g homebridge`
-- 1.2 `npm install -g homebridge-roomba`
+- 1.a `sudo npm install -g homebridge --unsafe-perm`
+- 1.b `sudo npm install -g homebridge-roomba-stv`
 
 ### 2. Find robotpwd and blid.
-- 2.1 Run `npm run getrobotpwd 192.16.xx.xx` where this plugin in installed
-- 2.2 Follow instructions
+- 2.a Run `npm run getrobotpwd 192.16.xx.xx` where this plugin in installed
+- 2.b Follow instructions
 
 If successful, the following message will be displayed.
 
@@ -69,5 +69,7 @@ Password=> :1:2345678910:ABCDEFGHIJKLMNOP <= Yes, all this string.
 #### Refresh mode
 This plugins supports these refresh modes:
 - NONE (`autoRefreshEnabled` and `keepAlive` both set to false) - no auto refresh, we will connect to roomba and poll status when requested by home app. Please note that this will cause "Updating" status for all homebridge accessories.
+
 - AUTO REFRESH (`autoRefreshEnabled` set to true) - we will connect to roomba, every `pollingInterval` seconds, and store the status in cache. if `pollingInterval` = `cacheTTL` - 10 (or more), this will make sure we will always have a valid status.
+
 - KEEP ALIVE (`keepAlive` set to true) - we will keep a connection to roomba, this will cause app to fail to connect to roomba in local network mode (cloud mode will work just fine, even in your home wifi). This will lead to better performance (status will refresh faster, and toggle will work faster as well). **Keep in mind this will increase the Roomba battery consumption**.
