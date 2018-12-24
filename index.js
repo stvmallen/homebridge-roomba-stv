@@ -82,7 +82,7 @@ roombaAccessory.prototype = {
 
                     callback(error);
                 } finally {
-                    await this.sleep(2000);
+                    await setTimeout(() => this.log.debug('Trying to dock again...'), 2000);
 
                     this.endRoombaIfNeeded(roomba);
                 }
@@ -135,7 +135,7 @@ roombaAccessory.prototype = {
                 case "run":
                     this.log("Roomba is still running. Will check again in 3 seconds");
 
-                    await this.sleep(pollingInterval);
+                    await setTimeout(() => this.log.debug('Trying to dock again...'), pollingInterval);
                     this.dockWhenStopped(roomba, pollingInterval);
 
                     break;
@@ -150,12 +150,6 @@ roombaAccessory.prototype = {
             this.log(error);
             this.endRoombaIfNeeded(roomba);
         }
-    },
-
-    sleep(delay) {
-        return new Promise((resolve, reject) => {
-            setTimeout(resolve, delay);
-        });
     },
 
     getRunningStatus(callback) {
@@ -215,12 +209,12 @@ roombaAccessory.prototype = {
     getStatus(callback, silent) {
         let status = this.cache.get(STATUS);
 
-        if (!status) {
-            setTimeout(() => this.getStatus(callback, silent), 10);
+        if (status) {
+            callback(null, status);
         } else if (!this.autoRefreshEnabled) {
             this.getStatusFromRoomba(callback, silent);
         } else {
-            callback(null, status);
+            setTimeout(() => this.getStatus(callback, silent), 10);
         }
     },
 
