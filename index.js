@@ -3,6 +3,7 @@ let Characteristic;
 
 const dorita980 = require("dorita980");
 const nodeCache = require("node-cache");
+const timeout = require('promise-timeout').timeout;
 const STATUS = "status";
 
 const roombaAccessory = function (log, config) {
@@ -210,7 +211,7 @@ roombaAccessory.prototype = {
         let status = this.cache.get(STATUS);
 
         if (status) {
-            callback(null, status);
+            callback(status.error, status);
         } else if (!this.autoRefreshEnabled) {
             this.getStatusFromRoomba(callback, silent);
         } else {
@@ -223,7 +224,7 @@ roombaAccessory.prototype = {
 
         this.onConnected(roomba, async () => {
             try {
-                let response = await roomba.getRobotState(["cleanMissionStatus", "batPct", "bin"]);
+                let response = await timeout(roomba.getRobotState(["cleanMissionStatus", "batPct", "bin"]), 5000);
                 const status = this.parseState(response);
 
                 if (this.autoRefreshEnabled) {
@@ -248,7 +249,7 @@ roombaAccessory.prototype = {
 
                 callback(error);
 
-                this.cache.del(STATUS);
+                this.cache.set(STATUS, {error: error});
             } finally {
                 this.endRoombaIfNeeded(roomba);
             }
