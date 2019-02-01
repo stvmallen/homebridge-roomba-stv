@@ -17,6 +17,7 @@ const roombaAccessory = function (log, config) {
     this.keepAliveEnabled = config.keepAliveEnabled;
     this.autoRefreshEnabled = config.autoRefreshEnabled;
     this.cacheTTL = config.cacheTTL || 5;
+    this.disableWait = config.disableWait;
     this.roomba = null;
 
     this.accessoryInfo = new Service.AccessoryInformation();
@@ -215,7 +216,11 @@ roombaAccessory.prototype = {
         } else if (!this.autoRefreshEnabled) {
             this.getStatusFromRoomba(callback, silent);
         } else {
-            setTimeout(() => this.getStatus(callback, silent), 10);
+            if (!this.disableWait) {
+                setTimeout(() => this.getStatus(callback, silent), 10);
+            } else {
+                callback('Failed getting status');
+            }
         }
     },
 
