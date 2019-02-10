@@ -5,6 +5,7 @@ const dorita980 = require("dorita980");
 const nodeCache = require("node-cache");
 const timeout = require('promise-timeout').timeout;
 const STATUS = "status";
+const OLD_STATUS = 'oldStatus';
 
 const roombaAccessory = function (log, config) {
     this.log = log;
@@ -218,6 +219,11 @@ roombaAccessory.prototype = {
         } else {
             if (!this.disableWait) {
                 setTimeout(() => this.getStatus(callback, silent), 10);
+            } else if (this.cache.get(OLD_STATUS)) {
+                this.log.warn('Using expired status');
+
+                status = this.cache.get(OLD_STATUS);
+                callback(status.error, status);
             } else {
                 callback('Failed getting status');
             }
@@ -362,6 +368,8 @@ roombaAccessory.prototype = {
         let that = this;
         this.cache.on('expired', (key, value) => {
             that.log.debug(key + " expired");
+
+            that.cache.set(OLD_STATUS, value, 0);
 
             that.getStatusFromRoomba((error, status) => {
                 if (!error) that.updateCharacteristics(status);
