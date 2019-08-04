@@ -24,8 +24,8 @@
     "getrobotpwd": "cd node_modules/dorita980 && npm install && node ./bin/getpassword.js"
   },
   "dependencies": {
-    "dorita980": "^3.0.12",
-    "node-cache": "^4.2.0",
+    "dorita980": "^3.1.3",
+    "node-cache": "^4.2.1",
     "promise-timeout": "^1.3.0"
   }
 }
