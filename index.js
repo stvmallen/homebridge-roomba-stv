@@ -77,7 +77,7 @@ roombaAccessory.prototype = {
                 try {
                     this.log("Roomba is running");
 
-                    await roomba.start();
+                    await roomba.clean();
 
                     callback();
                 } catch (error) {
