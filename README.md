@@ -27,8 +27,9 @@ https://github.com/gbro115/homebridge-roomba690
 - 1.b `sudo npm install -g homebridge-roomba-stv`
 
 ### 2. Find robotpwd and blid.
-- 2.a Run `npm run getrobotpwd 192.16.xx.xx` where this plugin in installed
-- 2.b Follow instructions
+- 2.a Run `cd $(npm -g prefix)/lib/node_modules/homebridge-roomba-stv`
+- 2.b Run `sudo npm run getrobotpwd 192.168.xxx.xxx` using the IP address of your Roomba
+- 2.c Follow on-screen instructions
 
 If successful, the following message will be displayed.
 
@@ -39,7 +40,7 @@ Robot Data:
 { ver: '2',
   hostname: 'Roomba-xxxxxxxxxxxxxxxx',
   robotname: 'Your Roomba’s Name',
-  ip: '192.168.xx.xx',
+  ip: '192.168.xxx.xxx',
   mac: 'xx:xx:xx:xx:xx:xx',
   sw: 'vx.x.x-x',
   sku: 'R98----',
@@ -49,6 +50,8 @@ Robot Data:
 Password=> :1:2345678910:ABCDEFGHIJKLMNOP <= Yes, all this string.
 ```
 
+If failed, you may safely try again anytime.
+
 ### 4. Update homebridge configuration file.
 ```
 "accessories": [
@@ -56,12 +59,12 @@ Password=> :1:2345678910:ABCDEFGHIJKLMNOP <= Yes, all this string.
     "accessory": "Roomba",
     "name": "Roomba",
     "model": "960",
-    "blid": "1234567890",
-    "robotpwd": "aPassword",
-    "ipaddress": "10.0.0.30",
+    "blid": "0123456789abcdef", // From above
+    "robotpwd": ":1:2345678910:ABCDEFGHIJKLMNOP", // From above
+    "ipaddress": "192.168.xxx.xxx",
     "autoRefreshEnabled": true,
-    "keepAliveEnabled": true, //If you use local network mode in roomba app, consider disabling. see note below
-    "cacheTTL": 30 //in seconds
+    "keepAliveEnabled": true, // If you use local network mode in roomba app, consider disabling. see note below
+    "cacheTTL": 30 // in seconds
   }
 ]
 ```
