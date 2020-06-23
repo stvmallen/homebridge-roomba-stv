@@ -27,10 +27,10 @@ const roombaAccessory = function (log, config) {
     this.switchService = new Service.Switch(this.name);
     this.batteryService = new Service.BatteryService(this.name);
     if (this.showDockAsContactSensor) {
-        this.dockService = new Service.ContactSensor(this.name + " Docked");
+        this.dockService = new Service.ContactSensor(this.name + " Docked", "docked");
     }
     if (this.showRunningAsContactSensor) {
-        this.runningService = new Service.ContactSensor(this.name + " Running");
+        this.runningService = new Service.ContactSensor(this.name + " Running", "running");
     }
 
     this.cache = new nodeCache({
