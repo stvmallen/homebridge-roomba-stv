@@ -351,7 +351,7 @@ roombaAccessory.prototype = {
         this.batteryService
             .getCharacteristic(Characteristic.StatusLowBattery)
             .on("get", this.getLowBatteryStatus.bind(this));
-        services.push(this.switchService);
+        services.push(this.batteryService);
 
         if (this.showDockAsContactSensor) {
             this.dockService
