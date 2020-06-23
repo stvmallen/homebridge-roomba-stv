@@ -18,6 +18,7 @@ const roombaAccessory = function (log, config) {
     this.keepAliveEnabled = config.keepAliveEnabled;
     this.autoRefreshEnabled = config.autoRefreshEnabled;
     this.showDockAsContactSensor = config.dockContactSensor == undefined ? true : config.dockContactSensor;
+    this.showRunningAsContactSensor = config.runningContactSensor;
     this.cacheTTL = config.cacheTTL || 5;
     this.disableWait = config.disableWait;
     this.roomba = null;
@@ -27,6 +28,9 @@ const roombaAccessory = function (log, config) {
     this.batteryService = new Service.BatteryService(this.name);
     if (this.showDockAsContactSensor) {
         this.dockService = new Service.ContactSensor(this.name + " Docked");
+    }
+    if (this.showRunningAsContactSensor) {
+        this.runningService = new Service.ContactSensor(this.name + " Running");
     }
 
     this.cache = new nodeCache({
@@ -322,17 +326,21 @@ roombaAccessory.prototype = {
     },
 
     getServices() {
+        const services = [];
+
         this.accessoryInfo.setCharacteristic(Characteristic.Manufacturer, "iRobot");
         this.accessoryInfo.setCharacteristic(Characteristic.SerialNumber, "See iRobot App");
         this.accessoryInfo.setCharacteristic(Characteristic.Identify, false);
         this.accessoryInfo.setCharacteristic(Characteristic.Name, this.name);
         this.accessoryInfo.setCharacteristic(Characteristic.Model, this.model);
         this.accessoryInfo.setCharacteristic(Characteristic.FirmwareRevision, this.firmware);
+        services.push(this.accessoryInfo);
 
         this.switchService
             .getCharacteristic(Characteristic.On)
             .on("set", this.setState.bind(this))
             .on("get", this.getRunningStatus.bind(this));
+        services.push(this.switchService);
 
         this.batteryService
             .getCharacteristic(Characteristic.BatteryLevel)
@@ -343,17 +351,22 @@ roombaAccessory.prototype = {
         this.batteryService
             .getCharacteristic(Characteristic.StatusLowBattery)
             .on("get", this.getLowBatteryStatus.bind(this));
+        services.push(this.switchService);
+
         if (this.showDockAsContactSensor) {
             this.dockService
                 .getCharacteristic(Characteristic.ContactSensorState)
                 .on("get", this.getDockedState.bind(this));
+            services.push(this.dockService);
+        }
+        if (this.showRunningAsContactSensor) {
+            this.runningService
+                .getCharacteristic(Characteristic.ContactSensorState)
+                .on("get", this.getRunningStatus.bind(this));
+            services.push(this.runningService);
         }
 
-        if (this.showDockAsContactSensor) {
-            return [this.accessoryInfo, this.switchService, this.batteryService, this.dockService];
-        } else {
-            return [this.accessoryInfo, this.switchService, this.batteryService];
-        }
+        return services;
     },
 
     registerStateUpdate() {
@@ -389,6 +402,11 @@ roombaAccessory.prototype = {
             this.dockService
                 .getCharacteristic(Characteristic.ContactSensorState)
                 .updateValue(!status.charging);
+        }
+        if (this.showRunningAsContactSensor) {
+            this.runningService
+                .getCharacteristic(Characteristic.ContactSensorState)
+                .updateValue(status.running);
         }
     },
 

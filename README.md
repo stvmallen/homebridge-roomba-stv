@@ -63,6 +63,7 @@ Password=> :1:2345678910:ABCDEFGHIJKLMNOP <= Yes, all this string.
     "autoRefreshEnabled": true,
     "keepAliveEnabled": true, // If you use local network mode in roomba app, consider disabling. see note below
     "dockContactSensor": true, // shows the charging state as a contact sensor, for notifications.  Must be autorefreshed or kept alive for this to be useful.
+    "runningContactSensor": false, // shows the running state as a contact sensor, for notifications.  Must be autorefreshed or kept alive for this to be useful.
     "cacheTTL": 30, //in seconds
   }
   ...
