@@ -17,6 +17,8 @@ const roombaAccessory = function (log, config) {
     this.firmware = "N/A";
     this.keepAliveEnabled = config.keepAliveEnabled;
     this.autoRefreshEnabled = config.autoRefreshEnabled;
+    this.showDockAsContactSensor = config.dockContactSensor == undefined ? true : config.dockContactSensor;
+    this.showRunningAsContactSensor = config.runningContactSensor;
     this.cacheTTL = config.cacheTTL || 5;
     this.disableWait = config.disableWait;
     this.roomba = null;
@@ -24,6 +26,12 @@ const roombaAccessory = function (log, config) {
     this.accessoryInfo = new Service.AccessoryInformation();
     this.switchService = new Service.Switch(this.name);
     this.batteryService = new Service.BatteryService(this.name);
+    if (this.showDockAsContactSensor) {
+        this.dockService = new Service.ContactSensor(this.name + " Docked", "docked");
+    }
+    if (this.showRunningAsContactSensor) {
+        this.runningService = new Service.ContactSensor(this.name + " Running", "running");
+    }
 
     this.cache = new nodeCache({
         stdTTL: this.cacheTTL,
@@ -179,6 +187,18 @@ roombaAccessory.prototype = {
         });
     },
 
+    getDockedState(callback) {
+        this.log("Docked status requested");
+
+        this.getStatus((error, status) => {
+            if (error) {
+                callback(error);
+            } else {
+                callback(null, !status.charging);
+            }
+        });
+    },
+
     getBatteryLevel(callback) {
         this.log("Battery level requested");
 
@@ -306,17 +326,21 @@ roombaAccessory.prototype = {
     },
 
     getServices() {
+        const services = [];
+
         this.accessoryInfo.setCharacteristic(Characteristic.Manufacturer, "iRobot");
         this.accessoryInfo.setCharacteristic(Characteristic.SerialNumber, "See iRobot App");
         this.accessoryInfo.setCharacteristic(Characteristic.Identify, false);
         this.accessoryInfo.setCharacteristic(Characteristic.Name, this.name);
         this.accessoryInfo.setCharacteristic(Characteristic.Model, this.model);
         this.accessoryInfo.setCharacteristic(Characteristic.FirmwareRevision, this.firmware);
+        services.push(this.accessoryInfo);
 
         this.switchService
             .getCharacteristic(Characteristic.On)
             .on("set", this.setState.bind(this))
             .on("get", this.getRunningStatus.bind(this));
+        services.push(this.switchService);
 
         this.batteryService
             .getCharacteristic(Characteristic.BatteryLevel)
@@ -327,8 +351,22 @@ roombaAccessory.prototype = {
         this.batteryService
             .getCharacteristic(Characteristic.StatusLowBattery)
             .on("get", this.getLowBatteryStatus.bind(this));
+        services.push(this.batteryService);
 
-        return [this.accessoryInfo, this.switchService, this.batteryService];
+        if (this.showDockAsContactSensor) {
+            this.dockService
+                .getCharacteristic(Characteristic.ContactSensorState)
+                .on("get", this.getDockedState.bind(this));
+            services.push(this.dockService);
+        }
+        if (this.showRunningAsContactSensor) {
+            this.runningService
+                .getCharacteristic(Characteristic.ContactSensorState)
+                .on("get", this.getRunningStatus.bind(this));
+            services.push(this.runningService);
+        }
+
+        return services;
     },
 
     registerStateUpdate() {
@@ -360,6 +398,16 @@ roombaAccessory.prototype = {
         this.batteryService
             .getCharacteristic(Characteristic.StatusLowBattery)
             .updateValue(status.batteryStatus);
+        if (this.showDockAsContactSensor) {
+            this.dockService
+                .getCharacteristic(Characteristic.ContactSensorState)
+                .updateValue(!status.charging);
+        }
+        if (this.showRunningAsContactSensor) {
+            this.runningService
+                .getCharacteristic(Characteristic.ContactSensorState)
+                .updateValue(status.running);
+        }
     },
 
     enableAutoRefresh() {
