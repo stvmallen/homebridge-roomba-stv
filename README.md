@@ -49,6 +49,12 @@ Robot Data:
 Password=> :1:2345678910:ABCDEFGHIJKLMNOP <= Yes, all this string.
 ```
 
+If the app doesn't give you a password try the following:
+- 2.c `npm install -g dorita980`
+- 2.d `get-roomba-password <robotIP>`
+
+Now try step 2.b again
+
 ### 4. Update homebridge configuration file.
 ```
 "accessories": [
